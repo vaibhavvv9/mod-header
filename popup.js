@@ -85,6 +85,21 @@ function hasFilter(h) {
   return h.tabId != null || parseDomains(h.domains).length > 0;
 }
 
+// Human-readable label for a pinned tab, looked up live so it tracks
+// navigation. Falls back gracefully if the tab is gone.
+async function describeTab(tabId, max = 40) {
+  const tab = await chrome.tabs.get(tabId).catch(() => null);
+  if (!tab) return 'closed tab';
+  let host = '';
+  try {
+    host = new URL(tab.url).hostname;
+  } catch {
+    // chrome:// pages etc. — title alone is fine
+  }
+  const label = tab.title || host || `tab ${tabId}`;
+  return label.length > max ? `${label.slice(0, max)}…` : label;
+}
+
 function renderRow(h) {
   const item = document.createElement('div');
   item.className = 'item';
@@ -159,11 +174,12 @@ function renderRow(h) {
   if (!expandedFilters.has(h.id) && hasFilter(h)) {
     const meta = document.createElement('button');
     meta.className = 'filter-meta';
-    const parts = [];
-    const domains = parseDomains(h.domains);
-    if (domains.length > 0) parts.push(domains.join(', '));
-    if (h.tabId != null) parts.push('this tab');
-    meta.textContent = parts.join(' · ');
+    const domainText = parseDomains(h.domains).join(', ');
+    const setMeta = (tabText) => {
+      meta.textContent = [domainText, tabText].filter(Boolean).join(' · ');
+    };
+    setMeta(h.tabId != null ? 'this tab' : '');
+    if (h.tabId != null) describeTab(h.tabId).then((label) => setMeta(`tab: ${label}`));
     meta.title = 'Edit filters';
     meta.addEventListener('click', () => {
       expandedFilters.add(h.id);
@@ -191,6 +207,12 @@ function renderRow(h) {
     tabChip.className = 'tab-chip' + (h.tabId != null ? ' active' : '');
     tabChip.textContent = h.tabId != null ? 'This tab ✓' : 'This tab';
     tabChip.title = 'Apply this header only in the current tab';
+    if (h.tabId != null) {
+      describeTab(h.tabId, 24).then((label) => {
+        tabChip.textContent = `✓ ${label}`;
+        tabChip.title = 'Pinned to this tab — click to unpin';
+      });
+    }
     tabChip.addEventListener('click', async () => {
       if (h.tabId != null) {
         h.tabId = null;
