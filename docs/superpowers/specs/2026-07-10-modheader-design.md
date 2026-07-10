@@ -41,12 +41,12 @@ Stored in `chrome.storage.local`:
 {
   "paused": false,
   "headers": [
-    { "id": 1710000000001, "name": "Authorization", "value": "Bearer …", "enabled": true }
+    { "id": "8f3c…-uuid", "name": "Authorization", "value": "Bearer …", "enabled": true }
   ]
 }
 ```
 
-`id` is a unique integer (timestamp + counter), reused as the `declarativeNetRequest` rule id.
+`id` is a UUID string (`crypto.randomUUID()`) used only for UI row identity. `declarativeNetRequest` rule ids must be small positive int32s, so they are assigned positionally (1, 2, 3, …) each time the rule set is rebuilt; the previous rule set is always removed in the same atomic call, so ids never collide.
 
 ## Data Flow
 
