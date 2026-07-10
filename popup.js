@@ -23,7 +23,7 @@ addBtn.addEventListener('click', () => {
     value: '',
     enabled: true,
     domains: '',
-    tabId: null,
+    tabIds: [],
   });
   render();
   listEl.querySelector('.item:last-child .name')?.focus();
@@ -55,19 +55,28 @@ async function init() {
   save(); // re-sync rules from stored state in case a previous save was interrupted
 }
 
-// Tab ids are meaningless after a browser restart (and a pinned tab may have
+// Tab ids are meaningless after a browser restart (and pinned tabs may have
 // been closed). storage.session is cleared on restart, so a missing marker
-// means every stored tab pin is stale. A header whose tab is gone gets
-// disabled rather than silently becoming global.
+// means every stored tab pin is stale. Dead pins are dropped; a header whose
+// pins are ALL gone gets disabled rather than silently becoming global.
 async function reconcileTabPins() {
   const { alive } = await chrome.storage.session.get({ alive: false });
   if (!alive) await chrome.storage.session.set({ alive: true });
   for (const h of state.headers) {
-    if (h.tabId == null) continue;
-    const tab = alive ? await chrome.tabs.get(h.tabId).catch(() => null) : null;
-    if (!tab) {
-      h.tabId = null;
-      h.enabled = false;
+    // Migrate the pre-1.1 single-pin shape
+    if (!Array.isArray(h.tabIds)) h.tabIds = h.tabId != null ? [h.tabId] : [];
+    delete h.tabId;
+    if (h.tabIds.length === 0) continue;
+    const live = alive
+      ? (
+          await Promise.all(
+            h.tabIds.map((id) => chrome.tabs.get(id).then(() => id).catch(() => null)),
+          )
+        ).filter((id) => id !== null)
+      : [];
+    if (live.length < h.tabIds.length) {
+      h.tabIds = live;
+      if (live.length === 0) h.enabled = false;
     }
   }
 }
@@ -82,7 +91,14 @@ function render() {
 }
 
 function hasFilter(h) {
-  return h.tabId != null || parseDomains(h.domains).length > 0;
+  return (h.tabIds?.length ?? 0) > 0 || parseDomains(h.domains).length > 0;
+}
+
+async function focusTab(tabId) {
+  const tab = await chrome.tabs.get(tabId).catch(() => null);
+  if (!tab) return;
+  await chrome.tabs.update(tabId, { active: true });
+  await chrome.windows.update(tab.windowId, { focused: true });
 }
 
 // Human-readable label for a pinned tab, looked up live so it tracks
@@ -178,8 +194,13 @@ function renderRow(h) {
     const setMeta = (tabText) => {
       meta.textContent = [domainText, tabText].filter(Boolean).join(' · ');
     };
-    setMeta(h.tabId != null ? 'this tab' : '');
-    if (h.tabId != null) describeTab(h.tabId).then((label) => setMeta(`tab: ${label}`));
+    const pins = h.tabIds ?? [];
+    setMeta(pins.length > 0 ? `${pins.length} tab${pins.length > 1 ? 's' : ''}` : '');
+    if (pins.length > 0) {
+      Promise.all(pins.map((id) => describeTab(id, 24))).then((labels) =>
+        setMeta(`${pins.length > 1 ? 'tabs' : 'tab'}: ${labels.join(', ')}`),
+      );
+    }
     meta.title = 'Edit filters';
     meta.addEventListener('click', () => {
       expandedFilters.add(h.id);
@@ -203,29 +224,56 @@ function renderRow(h) {
       scheduleSave();
     });
 
-    const tabChip = document.createElement('button');
-    tabChip.className = 'tab-chip' + (h.tabId != null ? ' active' : '');
-    tabChip.textContent = h.tabId != null ? 'This tab ✓' : 'This tab';
-    tabChip.title = 'Apply this header only in the current tab';
-    if (h.tabId != null) {
-      describeTab(h.tabId, 24).then((label) => {
-        tabChip.textContent = `✓ ${label}`;
-        tabChip.title = 'Pinned to this tab — click to unpin';
+    const tabRow = document.createElement('div');
+    tabRow.className = 'tab-row';
+
+    for (const tabId of h.tabIds ?? []) {
+      const chip = document.createElement('span');
+      chip.className = 'tab-chip pinned';
+
+      const label = document.createElement('button');
+      label.className = 'tab-chip-label';
+      label.textContent = `tab ${tabId}`;
+      label.title = 'Show this tab';
+      describeTab(tabId, 20).then((text) => {
+        label.textContent = text;
       });
+      label.addEventListener('click', () => focusTab(tabId));
+
+      const unpin = document.createElement('button');
+      unpin.className = 'tab-chip-x';
+      unpin.textContent = '✕';
+      unpin.title = 'Unpin this tab';
+      unpin.addEventListener('click', () => {
+        h.tabIds = h.tabIds.filter((t) => t !== tabId);
+        render();
+        save();
+      });
+
+      chip.append(label, unpin);
+      tabRow.append(chip);
     }
-    tabChip.addEventListener('click', async () => {
-      if (h.tabId != null) {
-        h.tabId = null;
-      } else {
-        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        if (!tab) return;
-        h.tabId = tab.id;
+
+    const pinBtn = document.createElement('button');
+    pinBtn.className = 'tab-chip';
+    pinBtn.textContent = '＋ Pin this tab';
+    pinBtn.title = 'Also apply this header in the current tab only';
+    chrome.tabs.query({ active: true, currentWindow: true }).then(([tab]) => {
+      if (tab && (h.tabIds ?? []).includes(tab.id)) {
+        pinBtn.disabled = true;
+        pinBtn.textContent = '✓ Current tab pinned';
       }
+    });
+    pinBtn.addEventListener('click', async () => {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (!tab || h.tabIds.includes(tab.id)) return;
+      h.tabIds.push(tab.id);
       render();
       save();
     });
+    tabRow.append(pinBtn);
 
-    panel.append(domains, tabChip);
+    panel.append(domains, tabRow);
     item.append(panel);
   }
 

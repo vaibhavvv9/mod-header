@@ -8,7 +8,7 @@ const header = (over = {}) => ({
   value: 'v',
   enabled: true,
   domains: '',
-  tabId: null,
+  tabIds: [],
   ...over,
 });
 
@@ -107,7 +107,7 @@ test('tab-scoped headers become session rules with tabIds and offset ids', () =>
     paused: false,
     headers: [
       header({ name: 'X-Global', value: '1' }),
-      header({ id: 'uuid-2', name: 'X-TabOnly', value: '2', tabId: 42 }),
+      header({ id: 'uuid-2', name: 'X-TabOnly', value: '2', tabIds: [42] }),
     ],
   };
   const { dynamic, session } = buildRuleSets(state);
@@ -119,10 +119,18 @@ test('tab-scoped headers become session rules with tabIds and offset ids', () =>
   assert.equal(session[0].action.requestHeaders[0].header, 'X-TabOnly');
 });
 
+test('a header can be pinned to multiple tabs with one session rule', () => {
+  const state = { paused: false, headers: [header({ tabIds: [7, 9, 12] })] };
+  const { dynamic, session } = buildRuleSets(state);
+  assert.equal(dynamic.length, 0);
+  assert.equal(session.length, 1);
+  assert.deepEqual(session[0].condition.tabIds, [7, 9, 12]);
+});
+
 test('tab filter and domain filter combine on one rule', () => {
   const state = {
     paused: false,
-    headers: [header({ domains: 'example.com', tabId: 7 })],
+    headers: [header({ domains: 'example.com', tabIds: [7] })],
   };
   const { dynamic, session } = buildRuleSets(state);
   assert.equal(dynamic.length, 0);

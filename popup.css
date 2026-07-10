@@ -176,9 +176,17 @@ body.paused #header-list { opacity: 0.45; }
 
 .filter-panel {
   display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  padding: 0 68px 8px 46px; /* aligns under the name/value fields */
+}
+
+.tab-row {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  padding: 0 68px 6px 46px; /* aligns under the name/value fields */
+  gap: 6px;
 }
 
 .filter-panel .domains {
@@ -211,13 +219,43 @@ body.paused #header-list { opacity: 0.45; }
   cursor: pointer;
 }
 
-.tab-chip:hover { border-color: var(--accent); color: var(--accent); }
+.tab-chip:hover:not(:disabled):not(.pinned) { border-color: var(--accent); color: var(--accent); }
 
-.tab-chip.active {
+.tab-chip:disabled { opacity: 0.6; cursor: default; }
+
+.tab-chip.pinned {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   background: var(--accent);
   border-color: var(--accent);
   color: #fff;
+  cursor: default;
 }
+
+.tab-chip-label {
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  padding: 0;
+  cursor: pointer;
+}
+
+.tab-chip-label:hover { text-decoration: underline; }
+
+.tab-chip-x {
+  border: none;
+  background: none;
+  color: inherit;
+  opacity: 0.7;
+  padding: 0 2px;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.tab-chip-x:hover { opacity: 1; }
 
 .delete {
   flex: none;

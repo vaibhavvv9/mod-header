@@ -27,11 +27,16 @@ export function parseDomains(str) {
   return out;
 }
 
+function pinnedTabs(h) {
+  return Array.isArray(h.tabIds) ? h.tabIds : [];
+}
+
 function toRule(h, id) {
   const condition = { urlFilter: '*' };
   const domains = parseDomains(h.domains);
   if (domains.length > 0) condition.requestDomains = domains;
-  if (h.tabId != null) condition.tabIds = [h.tabId];
+  const tabs = pinnedTabs(h);
+  if (tabs.length > 0) condition.tabIds = tabs;
   return {
     id,
     priority: 1,
@@ -50,7 +55,7 @@ export function buildRuleSets(state) {
   const session = [];
   if (!state.paused) {
     for (const h of state.headers.filter(isActiveHeader)) {
-      if (h.tabId != null) {
+      if (pinnedTabs(h).length > 0) {
         session.push(toRule(h, SESSION_ID_OFFSET + session.length + 1));
       } else {
         dynamic.push(toRule(h, dynamic.length + 1));
