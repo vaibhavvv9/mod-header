@@ -15,6 +15,11 @@ natively, even after the browser is closed and reopened.
 - **＋ Add header** — add a name/value pair. Changes save automatically.
 - **Row toggle** — enable/disable one header without deleting it.
 - **ON/OFF pill** — pause/resume all headers at once.
+- **Funnel icon** — per-header filters: limit to specific domains
+  (comma-separated, subdomains match) and/or pin to the current tab only.
+  A tab-pinned header disables itself when that tab closes or the browser
+  restarts. The icon shows indigo when a filter is active.
+- **Toolbar badge** — the extension icon shows how many headers are active.
 - Invalid header names (spaces, colons, non-ASCII) get a red tint and are
   skipped; empty names/values are kept in the list but never applied.
 

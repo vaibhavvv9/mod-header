@@ -136,6 +136,70 @@ body.paused #header-list { opacity: 0.45; }
   text-overflow: ellipsis;
 }
 
+.filter {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 5px;
+  background: none;
+  color: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.row:hover .filter { color: var(--muted); }
+.filter:hover { color: var(--accent); background: var(--accent-soft); }
+.filter.active { color: var(--accent); }
+.filter.active svg { fill: currentColor; fill-opacity: 0.15; }
+
+.filter-panel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 68px 6px 46px; /* aligns under the name/value fields */
+}
+
+.filter-panel .domains {
+  flex: 1;
+  min-width: 0;
+  height: 26px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 0 8px;
+  font-size: 11px;
+  background: #f9fafb;
+  color: var(--text);
+}
+
+.filter-panel .domains:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: #fff;
+}
+
+.tab-chip {
+  flex: none;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tab-chip:hover { border-color: var(--accent); color: var(--accent); }
+
+.tab-chip.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
 .delete {
   flex: none;
   width: 22px;
