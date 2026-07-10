@@ -156,6 +156,22 @@ function renderRow(h) {
   row.append(toggle, name, value, filterBtn, del);
   item.append(row);
 
+  if (!expandedFilters.has(h.id) && hasFilter(h)) {
+    const meta = document.createElement('button');
+    meta.className = 'filter-meta';
+    const parts = [];
+    const domains = parseDomains(h.domains);
+    if (domains.length > 0) parts.push(domains.join(', '));
+    if (h.tabId != null) parts.push('this tab');
+    meta.textContent = parts.join(' · ');
+    meta.title = 'Edit filters';
+    meta.addEventListener('click', () => {
+      expandedFilters.add(h.id);
+      render();
+    });
+    item.append(meta);
+  }
+
   if (expandedFilters.has(h.id)) {
     const panel = document.createElement('div');
     panel.className = 'filter-panel';

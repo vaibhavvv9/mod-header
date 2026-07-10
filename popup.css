@@ -155,6 +155,25 @@ body.paused #header-list { opacity: 0.45; }
 .filter.active { color: var(--accent); }
 .filter.active svg { fill: currentColor; fill-opacity: 0.15; }
 
+.filter-meta {
+  display: block;
+  width: 100%;
+  margin-top: -3px;
+  padding: 0 68px 5px 46px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: 10.5px;
+  line-height: 1.3;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.filter-meta:hover { color: var(--accent); }
+
 .filter-panel {
   display: flex;
   align-items: center;
