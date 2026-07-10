@@ -1,0 +1,8 @@
+{
+  "name": "mod-header",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  }
+}
