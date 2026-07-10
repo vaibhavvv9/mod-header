@@ -1,13 +1,13 @@
 {
   "manifest_version": 3,
-  "name": "ModHeader",
+  "name": "HeaderPilot",
   "version": "1.0.0",
   "description": "Add or override request headers on all sites.",
   "permissions": ["declarativeNetRequest", "storage"],
   "host_permissions": ["<all_urls>"],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "ModHeader"
+    "default_title": "HeaderPilot"
   },
   "icons": {
     "16": "icons/icon16.png",

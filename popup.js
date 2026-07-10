@@ -34,7 +34,7 @@ async function init() {
   try {
     state = await chrome.storage.local.get({ paused: false, headers: [] });
   } catch (err) {
-    console.error('ModHeader: failed to load state', err);
+    console.error('HeaderPilot: failed to load state', err);
   }
   render();
   save(); // re-sync rules from stored state in case a previous save was interrupted
@@ -155,6 +155,6 @@ async function doSave() {
       addRules: buildRules(state),
     });
   } catch (err) {
-    console.error('ModHeader: failed to save/sync rules', err);
+    console.error('HeaderPilot: failed to save/sync rules', err);
   }
 }

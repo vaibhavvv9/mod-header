@@ -1,4 +1,4 @@
-# ModHeader
+# HeaderPilot
 
 A minimal Chrome extension (Manifest V3) that adds or overrides HTTP request
 headers on all sites. No build step, no dependencies, no background worker —
