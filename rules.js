@@ -31,8 +31,16 @@ function pinnedTabs(h) {
   return Array.isArray(h.tabIds) ? h.tabIds : [];
 }
 
+// Every resource type, spelled out because DNR's default EXCLUDES main_frame —
+// without this, headers never reach the top-level page request.
+const ALL_RESOURCE_TYPES = [
+  'main_frame', 'sub_frame', 'stylesheet', 'script', 'image', 'font',
+  'object', 'xmlhttprequest', 'ping', 'csp_report', 'media', 'websocket',
+  'webtransport', 'webbundle', 'other',
+];
+
 function toRule(h, id) {
-  const condition = { urlFilter: '*' };
+  const condition = { urlFilter: '*', resourceTypes: ALL_RESOURCE_TYPES };
   const domains = parseDomains(h.domains);
   if (domains.length > 0) condition.requestDomains = domains;
   const tabs = pinnedTabs(h);

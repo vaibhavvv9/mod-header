@@ -80,7 +80,16 @@ test('buildRuleSets produces set-header dynamic rules with sequential ids', () =
   ]);
   assert.equal(dynamic[1].action.requestHeaders[0].header, 'X-Trace-Id');
   assert.equal(dynamic[0].condition.urlFilter, '*');
-  assert.equal(dynamic[0].condition.resourceTypes, undefined);
+});
+
+test('rules cover main_frame — DNR excludes it by default, breaking page-routing headers', () => {
+  const state = { paused: false, headers: [header(), header({ id: 'uuid-2', name: 'X-Tab', tabIds: [7] })] };
+  const { dynamic, session } = buildRuleSets(state);
+  for (const rule of [...dynamic, ...session]) {
+    assert.ok(rule.condition.resourceTypes.includes('main_frame'));
+    assert.ok(rule.condition.resourceTypes.includes('xmlhttprequest'));
+    assert.ok(rule.condition.resourceTypes.includes('sub_frame'));
+  }
 });
 
 test('domain filter becomes a requestDomains condition; empty filter omits it', () => {
